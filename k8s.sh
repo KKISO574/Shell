@@ -1,12 +1,25 @@
 #!/bin/sh
 ## 权限判定
+
 function PermissionJudgment() {
     if [ $UID -ne 0 ]; then
         Output_Error "权限不足，请使用 Root 用户运行本脚本"
         exit
     fi
 }
+system(){
+    if [ -f /etc/redhat-release ];then
+        echo "系统检测通过"
+    else
+        echo "系统不是centos系列"
+        exit
 
+    fi
+
+
+}
+PermissionJudgment
+system
 
 red(){
     echo -e "\033[31m\033[01m$1\033[0m"
@@ -20,6 +33,7 @@ yellow(){
 blue(){
     echo -e "\033[34m\033[01m$1\033[0m"
 }
+
 main_menu() {
 red     "==============================================="
         echo "1) 初始化环境"
@@ -93,7 +107,7 @@ read -p "输入你要安装的docker版本，例如24.0.7-1" VERSION_STRING
 
 sudo yum install docker-ce-$VERSION_STRING.el7 docker-ce-cli-$VERSION_STRING.el7 containerd.io docker-compose-plugin
 
-if [ $? -eq 0 ]then;
+if [ $? -eq 0 ]; then
     echo "docker安装成功"
 else
     exit
