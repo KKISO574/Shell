@@ -8,11 +8,51 @@ function PermissionJudgment() {
 }
 
 
-echo "开始安装"
+red(){
+    echo -e "\033[31m\033[01m$1\033[0m"
+}
+green(){
+    echo -e "\033[32m\033[01m$1\033[0m"
+}
+yellow(){
+    echo -e "\033[33m\033[01m$1\033[0m"
+}
+blue(){
+    echo -e "\033[34m\033[01m$1\033[0m"
+}
+main_menu() {
+red     "==============================================="
+        echo "1) 初始化环境"
+        echo "2) 安装docker版本"
+        echo "3) 安装指定k8s版本"
+        echo "0) 退出"
+        echo "============================================"
 
-yum install -y ipset ipvsadm vim wget curl net-tools
+read -p "请输入选项： " select
+        case $select in
+        1)
+        set_base
+        ;;
+        2)
+        docker
+        ;;
+        3)
+        k8s
+        ;;
+        0)
+        exit
+        
+        ;;
+
+esac
+clear
+}
+
+
 function set_base(){
+yum install -y ipset ipvsadm vim wget curl net-tools
 # 关闭防火墙，PS：如果使用云服务器，还需要在云服务器的控制台中把防火墙关闭了或者允许所有端口。
+
 systemctl stop firewalld
 systemctl disable firewalld
 
@@ -39,26 +79,27 @@ EOF
 sysctl -p /etc/sysctl.d/k8s.conf
 # iptables生效参数
   sysctl --system
+ main_menu
+}
 
-sleep 1
+docker() {
 echo "开始导入Docker镜像源"
 #docker阿里源
 yum install -y yum-utils 
 yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+yum list docker-ce --showduplicates | sort -r
 
+read -p "输入你要安装的docker版本，例如24.0.7-1" VERSION_STRING
 
-echo "导入k8s阿里源"
-sleep 1
-#k8s阿里云源
-cat > /etc/yum.repos.d/kubernetes.repo << EOF
-[kubernetes]
-name=Kubernetes
-baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64
-enabled=1
-gpgcheck=0
-repo_gpgcheck=0
-gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
-EOF
+sudo yum install docker-ce-$VERSION_STRING.el7 docker-ce-cli-$VERSION_STRING.el7 containerd.io docker-compose-plugin
+
+if [ $? -eq 0 ]then;
+    echo "docker安装成功"
+else
+    exit
+    echo "安装失败检查输入的版本号"
+
+fi
 
 echo "变更镜像加速源以及cgroup"
 sleep 1
@@ -73,10 +114,30 @@ cat <<EOF | sudo tee /etc/docker/daemon.json
 	"exec-opts": ["native.cgroupdriver=systemd"]
 }
 EOF
-  
+systemctl daemon-reload && systemctl restart docker && systemctl enable docker && systemctl status docker 
+main_menu
 }
-PermissionJudgment
-set_base
+
+k8s() {
+
+echo "导入k8s阿里源"
+sleep 1
+#k8s阿里云源
+cat > /etc/yum.repos.d/kubernetes.repo << EOF
+[kubernetes]
+name=Kubernetes
+baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=0
+repo_gpgcheck=0
+gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+EOF
+
+
+
+main_menu
+}
+main_menu
 lsmod | grep br_netfilter
 echo "5秒后重启"
 sleep 5
