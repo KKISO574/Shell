@@ -54,12 +54,13 @@ read -p "请输入选项： " select
         k8s
         ;;
         0)
-        exit
         
+        clear
+        exit
         ;;
 
 esac
-clear
+
 }
 
 
@@ -103,9 +104,9 @@ yum install -y yum-utils
 yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
 yum list docker-ce --showduplicates | sort -r
 
-read -p "输入你要安装的docker版本，例如24.0.7-1" VERSION_STRING
+read -p "输入你要安装的docker版本，例如24.0.7-1 ：" VERSION_STRING
 
-sudo yum install docker-ce-$VERSION_STRING.el7 docker-ce-cli-$VERSION_STRING.el7 containerd.io docker-compose-plugin
+sudo yum install docker-ce-$VERSION_STRING.el7 docker-ce-cli-$VERSION_STRING.el7 containerd.io docker-compose-plugin -y
 
 if [ $? -eq 0 ]; then
     echo "docker安装成功"
@@ -129,6 +130,11 @@ cat <<EOF | sudo tee /etc/docker/daemon.json
 }
 EOF
 systemctl daemon-reload && systemctl restart docker && systemctl enable docker && systemctl status docker 
+docker info | grep -w "Cgroup Driver: systemd"
+if [ $? -ne 0 ];then
+echo "docker驱动不为systemd。请手动设置"
+
+fi
 main_menu
 }
 
@@ -147,6 +153,11 @@ repo_gpgcheck=0
 gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
 EOF
 
+yum list kubeadm --showduplicates | sort -r
+read -p "选择你要安装的k8s版本：" k8s_ver
+sudo yum install -y kubelet-$k8s_ver kubeadm-$k8s_ver kubectl-$k8s_ver --disableexcludes=kubernetes
+kubeadm config images pull --kubernetes-version=$k8s_ver --image-repository registry.aliyuncs.com/google_containers
+systemctl enable kubelet && systemctl start kubelet && systemctl status kubelet
 
 
 main_menu
