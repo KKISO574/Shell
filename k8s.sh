@@ -54,9 +54,7 @@ read -p "请输入选项： " select
         k8s
         ;;
         0)
-        
-        clear
-        exit
+        reboot
         ;;
 
 esac
@@ -165,7 +163,9 @@ systemctl enable kubelet && systemctl start kubelet && systemctl status kubelet
 main_menu
 }
 main_menu
+reboot(){
 lsmod | grep br_netfilter
 echo "5秒后重启"
 sleep 5
 reboot
+}
