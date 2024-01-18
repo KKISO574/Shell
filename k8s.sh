@@ -77,6 +77,16 @@ sed -ri 's/.*swap.*/#&/' /etc/fstab
 #关闭selinux
 sed -i 's/enforcing/disabled/' /etc/selinux/config #重启后生效
 # iptables配置
+cat > /etc/sysconfig/modules/ipvs.modules <<EOF
+#!/bin/bash
+modprobe -- ip_vs
+modprobe -- ip_vs_rr
+modprobe -- ip_vs_wrr
+modprobe -- ip_vs_sh
+modprobe -- nf_conntrack_ipv4
+EOF
+chmod 755 /etc/sysconfig/modules/ipvs.modules && bash /etc/sysconfig/modules/ipvs.modules && lsmod | grep -e ip_vs -e nf_conntrack_ipv4
+#加载内核模块
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 overlay
 br_netfilter
@@ -84,7 +94,7 @@ EOF
 #内核预检
 modprobe overlay
 modprobe br_netfilter
-
+#网桥转发
 cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-iptables = 1
 net.bridge.bridge-nf-call-ip6tables = 1
@@ -93,8 +103,8 @@ EOF
 # 将读取该文件中的参数设置，并将其应用到系统的当前运行状态中
 sysctl -p /etc/sysctl.d/k8s.conf
 # iptables生效参数
-  sysctl --system
- main_menu
+sysctl --system
+main_menu
 }
 
 docker() {
