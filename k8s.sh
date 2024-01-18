@@ -48,7 +48,7 @@ read -p "请输入选项： " select
         set_base
         ;;
         2)
-        docker
+        daoke
         ;;
         3)
         k8s
@@ -105,7 +105,7 @@ sysctl --system
 main_menu
 }
 
-docker() {
+daoke() {
 echo "开始导入Docker镜像源"
 #docker阿里源
 yum install -y yum-utils 
@@ -133,7 +133,6 @@ systemctl daemon-reload && systemctl restart docker && systemctl enable docker &
 docker info | grep -w "Cgroup Driver: systemd"
 if [ $? -ne 0 ];then
 echo "docker驱动不为systemd。请手动设置"
-
 fi
 main_menu
 }
