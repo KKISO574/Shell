@@ -118,14 +118,6 @@ read -p "输入你要安装的docker版本，例如24.0.7-1 ：" VERSION_STRING
 
 sudo yum install docker-ce-$VERSION_STRING.el7 docker-ce-cli-$VERSION_STRING.el7 containerd.io docker-compose-plugin -y
 
-if [ $? -eq 0 ]; then
-    echo "docker安装成功"
-else
-    exit
-    echo "安装失败检查输入的版本号"
-
-fi
-
 echo "变更镜像加速源以及cgroup"
 sleep 1
 
