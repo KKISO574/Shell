@@ -21,47 +21,6 @@ system(){
 PermissionJudgment
 system
 
-red(){
-    echo -e "\033[31m\033[01m$1\033[0m"
-}
-green(){
-    echo -e "\033[32m\033[01m$1\033[0m"
-}
-yellow(){
-    echo -e "\033[33m\033[01m$1\033[0m"
-}
-blue(){
-    echo -e "\033[34m\033[01m$1\033[0m"
-}
-
-main_menu() {
-red     "==============================================="
-        echo "1) 初始化环境"
-        echo "2) 安装docker版本"
-        echo "3) 安装指定k8s版本"
-        echo "0) 退出"
-        echo "============================================"
-
-read -p "请输入选项： " select
-        case $select in
-        1)
-        set_base
-        ;;
-        2)
-        daoke
-        ;;
-        3)
-        k8s
-        ;;
-        0)
-        reboot
-        ;;
-
-esac
-
-}
-
-
 function set_base(){
 yum install -y ipset ipvsadm vim wget curl net-tools
 # 关闭防火墙，PS：如果使用云服务器，还需要在云服务器的控制台中把防火墙关闭了或者允许所有端口。
@@ -102,8 +61,9 @@ EOF
 sysctl -p /etc/sysctl.d/k8s.conf
 # iptables生效参数
 sysctl --system
-main_menu
 }
+
+set_base
 
 daoke() {
 echo "开始导入Docker镜像源"
@@ -129,13 +89,15 @@ cat <<EOF | sudo tee /etc/docker/daemon.json
 	"exec-opts": ["native.cgroupdriver=systemd"]
 }
 EOF
+
 systemctl daemon-reload && systemctl restart docker && systemctl enable docker && systemctl status docker 
+
 docker info | grep -w "Cgroup Driver: systemd"
 if [ $? -ne 0 ];then
 echo "docker驱动不为systemd。请手动设置"
 fi
-main_menu
 }
+daoke
 
 k8s() {
 
@@ -158,13 +120,7 @@ sudo yum install -y kubelet-$k8s_ver kubeadm-$k8s_ver kubectl-$k8s_ver --disable
 kubeadm config images pull --kubernetes-version=$k8s_ver --image-repository registry.aliyuncs.com/google_containers
 systemctl enable kubelet && systemctl start kubelet && systemctl status kubelet
 
+}
+k8s
 
-main_menu
-}
-main_menu
-reboot(){
-lsmod | grep br_netfilter
-echo "5秒后重启"
-sleep 5
 reboot
-}
