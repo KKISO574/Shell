@@ -79,14 +79,14 @@ sudo yum install docker-ce-$VERSION_STRING.el7 docker-ce-cli-$VERSION_STRING.el7
 echo "变更镜像加速源以及cgroup"
 sleep 1
 
-cat <<EOF | sudo tee /etc/docker/daemon.json
+cat <<EOF > /etc/docker/daemon.json
 {
-	"registry-mirrors": [
+    "registry-mirrors": [
         "http://hub-mirror.c.163.com",
         "https://docker.mirrors.ustc.edu.cn",
         "https://registry.docker-cn.com"
     ],
-	"exec-opts": ["native.cgroupdriver=systemd"]
+    "exec-opts": ["native.cgroupdriver=systemd"]
 }
 EOF
 
